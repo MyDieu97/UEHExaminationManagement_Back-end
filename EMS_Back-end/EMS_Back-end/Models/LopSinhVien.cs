@@ -12,5 +12,7 @@ namespace EMS_Back_end.Models
         public string MaLop { get; set; }
 
         public string NganhHoc { get; set; }
+
+        public string HeDaoTao { get; set; }
     }
 }
