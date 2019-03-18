@@ -6,15 +6,17 @@ using System.Threading.Tasks;
 
 namespace EMS_Back_end.Models
 {
+    [Table("GIANGVIEN")]
     public class GiangVien
     {
+        [Column("GVID")]
         public int Id { get; set; }
 
         public string MaGV { get; set; }
 
-        public string TenGV { get; set; }
+        public string HoGV { get; set; }
 
-        public string Ten { get; set; }
+        public string TenGV { get; set; }
 
         public bool GioiTinh { get; set; }
 

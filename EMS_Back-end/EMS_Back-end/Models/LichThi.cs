@@ -6,12 +6,13 @@ using System.Threading.Tasks;
 
 namespace EMS_Back_end.Models
 {
+    [Table("LICHTHI")]
     public class LichThi
     {
+        [Column("LICHTHIID")]
         public int Id { get; set; }
 
-        public string ThoiKB { get; set; }
-
+        [Column("NGAYGIOTHI")]
         public DateTime NgayGioBDThi { get; set; }
 
         public string Thu { get; set; }
@@ -39,10 +40,10 @@ namespace EMS_Back_end.Models
         [ForeignKey("PhieuBaiThiId")]
         public virtual PhieuGiaoBaiThi PhieuBaiThi { get; set; }
         
-        public int LopSVId { get; set; }
+        //public int LopSVId { get; set; }
 
-        [ForeignKey("LopSVId")]
-        public virtual LopSinhVien LopSV { get; set; }
+        //[ForeignKey("LopSVId")]
+        //public virtual LopSinhVien LopSV { get; set; }
         
     }
 }

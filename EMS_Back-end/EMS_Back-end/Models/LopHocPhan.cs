@@ -7,12 +7,15 @@ using System.Threading.Tasks;
 
 namespace EMS_Back_end.Models
 {
+    [Table("LOPHOCPHAN")]
     public class LopHocPhan
     {
+        [Column("LOPHPID")]
         public int Id { get; set; }
 
         public string MaLopHP { get; set; }
 
+        [Column("THOIKHOABIEU")]
         public string ThoiKB { get; set; }
 
         public int HocPhanId { get; set; }

@@ -6,8 +6,10 @@ using System.Threading.Tasks;
 
 namespace EMS_Back_end.Models
 {
+    [Table("GIANGVIEN_CHAMTHI")]
     public class GiangVien_ChamThi
     {
+        [Column("CHAMTHIID")]
         public int Id { get; set; }
 
         public int SoBaiTL { get; set; }
@@ -16,12 +18,16 @@ namespace EMS_Back_end.Models
 
         public int SoBaiKTHP { get; set; }
 
+        [Column("DGTL")]
         public decimal DonGiaTL { get; set; }
 
+        [Column("DGQT")]
         public decimal DonGiaQT { get; set; }
 
+        [Column("DGKTHP")]
         public decimal DonGiaKTHP { get; set; }
 
+        [Column("GVID")]
         public int GiangVienId { get; set; }
 
         [ForeignKey("GiangVienId")]

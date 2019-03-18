@@ -6,8 +6,10 @@ using System.Threading.Tasks;
 
 namespace EMS_Back_end.Models
 {
+    [Table("HOCPHAN")]
     public class HocPhan
     {
+        [Column("HOCPHANID")]
         public int Id { get; set; }
 
         public string MaHP { get; set; }

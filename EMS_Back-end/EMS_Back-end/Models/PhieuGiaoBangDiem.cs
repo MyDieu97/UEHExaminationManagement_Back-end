@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace EMS_Back_end.Models
 {
+    [Table("PHIEUGIAOBANGDIEM")]
     public class PhieuGiaoBangDiem
     {
         public int Id { get; set; }
