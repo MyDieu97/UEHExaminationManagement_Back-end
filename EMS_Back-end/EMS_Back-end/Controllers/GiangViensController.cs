@@ -28,7 +28,7 @@ namespace EMS_Back_end.Controllers
             return new BaseResponse
             {
                 Message = "Lấy danh sách thành công!",
-                Data = await _context.GiangViens.ToListAsync()
+                Data = await _context.GiangViens.Include(x => x.DonViTrucThuoc).ToListAsync()
             };
         }
 
@@ -64,7 +64,7 @@ namespace EMS_Back_end.Controllers
                 return new BaseResponse
                 {
                     ErrorCode = 1,
-                    Message = "Not Found"
+                    Message = "Không tìm thấy"
                 };
             }
 
@@ -74,6 +74,7 @@ namespace EMS_Back_end.Controllers
             giangVienSua.GioiTinh = giangVien.GioiTinh;
             giangVienSua.HuuTri = giangVien.HuuTri;
             giangVienSua.MaGV = giangVien.MaGV;
+            giangVienSua.NgaySinh = giangVien.NgaySinh;
             giangVienSua.SoDT = giangVien.SoDT;
             giangVienSua.TenGV = giangVien.TenGV;
             giangVienSua.HoGV = giangVien.HoGV;
@@ -82,7 +83,7 @@ namespace EMS_Back_end.Controllers
             await _context.SaveChangesAsync();
             return new BaseResponse
             {
-                Message = "Update success",
+                Message = "Cập nhật thành công",
                 Data = giangVien
             };
         }
@@ -97,7 +98,7 @@ namespace EMS_Back_end.Controllers
                 await _context.SaveChangesAsync();
                 return new BaseResponse
                 {
-                    Message = "Added success",
+                    Message = "Thêm mới thành công",
                     Data = giangVien
                 };
             }
@@ -106,7 +107,7 @@ namespace EMS_Back_end.Controllers
                 return new BaseResponse
                 {
                     ErrorCode = 1,
-                    Message = "Adding fail"
+                    Message = "Thêm mới thất bại"
                 };
             }
         }
@@ -121,7 +122,7 @@ namespace EMS_Back_end.Controllers
                 return new BaseResponse
                 {
                     ErrorCode = 1,
-                    Message = "Delete fail"
+                    Message = "Xóa thất bại"
                 };
             }
 
@@ -130,7 +131,7 @@ namespace EMS_Back_end.Controllers
 
             return new BaseResponse
             {
-                Message = "Delete success"
+                Message = "Xóa thành công"
             };
         }
 

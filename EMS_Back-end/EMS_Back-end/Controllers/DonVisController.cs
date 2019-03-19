@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using EMS_Back_end.Models;
+using EMS_Back_end.Models.Response;
 
 namespace EMS_Back_end.Controllers
 {
@@ -22,79 +23,110 @@ namespace EMS_Back_end.Controllers
 
         // GET: api/DonVis
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<DonVi>>> GetDonVis()
+        public async Task<ActionResult<BaseResponse>> GetDonVis()
         {
-            return await _context.DonVis.ToListAsync();
+            return new BaseResponse
+            {
+                Message = "Lấy danh sách thành công!",
+                Data = await _context.DonVis.ToListAsync()
+            };
         }
 
         // GET: api/DonVis/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<DonVi>> GetDonVi(int id)
+        public async Task<ActionResult<BaseResponse>> GetDonVi(int id)
         {
             var donVi = await _context.DonVis.FindAsync(id);
 
             if (donVi == null)
             {
-                return NotFound();
+                return new BaseResponse
+                {
+                    ErrorCode = 1,
+                    Message = "Không tìm thấy"
+                };
             }
 
-            return donVi;
+            return new BaseResponse
+            {
+                Message = "Tìm thành công",
+                Data = donVi
+            };
         }
 
         // PUT: api/DonVis/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutDonVi(int id, DonVi donVi)
+        public async Task<ActionResult<BaseResponse>> PutDonVi(int id, DonVi donVi)
         {
-            if (id != donVi.Id)
+            var donViSua = await _context.DonVis.FindAsync(id);
+            if (donViSua == null)
             {
-                return BadRequest();
-            }
-
-            _context.Entry(donVi).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!DonViExists(id))
+                return new BaseResponse
                 {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+                    ErrorCode = 1,
+                    Message = "Không tìm thấy"
+                };
             }
+                        
+            donViSua.Email = donVi.Email;
+            donViSua.MaDonVi = donVi.MaDonVi;
+            donViSua.TenDonVi = donVi.TenDonVi;
+            donViSua.SoDT = donVi.SoDT;
 
-            return NoContent();
+            _context.DonVis.Update(donViSua);
+            await _context.SaveChangesAsync();
+            return new BaseResponse
+            {
+                Message = "Cập nhật thành công",
+                Data = donVi
+            };
         }
 
         // POST: api/DonVis
         [HttpPost]
-        public async Task<ActionResult<DonVi>> PostDonVi(DonVi donVi)
+        public async Task<ActionResult<BaseResponse>> PostDonVi(DonVi donVi)
         {
-            _context.DonVis.Add(donVi);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction("GetDonVi", new { id = donVi.Id }, donVi);
+            try
+            {
+                _context.DonVis.Add(donVi);
+                await _context.SaveChangesAsync();
+                return new BaseResponse
+                {
+                    Message = "Thêm mới thành công",
+                    Data = donVi
+                };
+            }
+            catch
+            {
+                return new BaseResponse
+                {
+                    ErrorCode = 1,
+                    Message = "Thêm mới thất bại"
+                };
+            }
         }
 
         // DELETE: api/DonVis/5
         [HttpDelete("{id}")]
-        public async Task<ActionResult<DonVi>> DeleteDonVi(int id)
+        public async Task<ActionResult<BaseResponse>> DeleteDonVi(int id)
         {
             var donVi = await _context.DonVis.FindAsync(id);
             if (donVi == null)
             {
-                return NotFound();
+                return new BaseResponse
+                {
+                    ErrorCode = 1,
+                    Message = "Xóa thất bại"
+                };
             }
 
             _context.DonVis.Remove(donVi);
             await _context.SaveChangesAsync();
 
-            return donVi;
+            return new BaseResponse
+            {
+                Message = "Xóa thành công"
+            };
         }
 
         private bool DonViExists(int id)

@@ -18,6 +18,8 @@ namespace EMS_Back_end.Models
 
         public string TenGV { get; set; }
 
+        public DateTime NgaySinh { get; set; }
+
         public bool GioiTinh { get; set; }
 
         public string SoDT { get; set; }
