@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using EMS_Back_end.Models;
-using EMS_Back_end.Models.Response;
+using EMS_Back_end.Models.Responses;
 
 namespace EMS_Back_end.Controllers
 {
@@ -90,7 +90,7 @@ namespace EMS_Back_end.Controllers
 
         // POST: api/GiangViens
         [HttpPost]
-        public async Task<ActionResult<BaseResponse>> PostGiangVien(GiangVien giangVien)
+        public async Task<BaseResponse> PostGiangVien(GiangVien giangVien)
         {
             try
             {

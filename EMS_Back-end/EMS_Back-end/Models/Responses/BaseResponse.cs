@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace EMS_Back_end.Models.Response
+namespace EMS_Back_end.Models.Responses
 {
     public class BaseResponse
     {
