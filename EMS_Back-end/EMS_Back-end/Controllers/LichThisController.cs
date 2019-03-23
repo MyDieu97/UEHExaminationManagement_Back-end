@@ -33,7 +33,9 @@ namespace EMS_Back_end.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<LichThi>>> GetLichThis()
         {
-            return await _context.LichThis.ToListAsync();
+            return await _context.LichThis.Include(x => x.LopHP)
+                                            .Include(x => x.LopHP.HocPhan)
+                                            .Include(x => x.LopHP.LopSV).ToListAsync();
         }
 
         // GET: api/LichThis/5
@@ -115,10 +117,10 @@ namespace EMS_Back_end.Controllers
         [HttpPost("ImportFile")]
         public async Task<ActionResult<BaseResponse>> ImportFile([FromForm] ImportFileRequest request)
         {
-            LichThi lichThi = new LichThi();
-            LopHocPhan lopHocPhan = new LopHocPhan();
-            LopSinhVien lopSinhVien = new LopSinhVien();
-            HocPhan hocPhan = new HocPhan();
+            LichThi lichThi;
+            LopHocPhan lopHocPhan;
+            LopSinhVien lopSinhVien;
+            HocPhan hocPhan;
                         
             using (var file = new OfficeOpenXml.ExcelPackage())
             {
@@ -131,71 +133,84 @@ namespace EMS_Back_end.Controllers
                 {
                     var rowCells = worksheet.Cells[i, 1, i, worksheet.Dimension.End.Column];
                     var maLopSV = rowCells[i, 10].Value.ToString();
-                    if (LopSinhVienExists(maLopSV) == false)
+                    lopSinhVien = LopSinhVienExists(maLopSV);
+                    if (lopSinhVien == null)
                     {
-                        //lopSinhVien.Id = null;
+                        lopSinhVien = new LopSinhVien();
                         lopSinhVien.MaLop = maLopSV;
                         lopSinhVien.NganhHoc = rowCells[i, 6].Value.ToString();
                         lopSinhVien.HeDaoTao = rowCells[i, 5].Value.ToString();
-                        //await lopSVsCtrl.PostLopSinhVien(lopSinhVien);
-                        _context.LopSinhViens.Add(lopSinhVien);
+                        await lopSVsCtrl.PostLopSinhVien(lopSinhVien);
+                        //_context.LopSinhViens.Add(lopSinhVien);
                     }
                     var maHP = rowCells[i, 1].Value.ToString();
-                    if (HocPhanExists(maHP) == false)
+                    hocPhan = HocPhanExists(maHP);
+                    if (hocPhan == null)
                     {
+                        hocPhan = new HocPhan();
                         hocPhan.HeDaoTao = rowCells[i, 5].Value.ToString();
                         hocPhan.MaHP = maHP;
-                        hocPhan.SoTinChi = Int16.Parse(rowCells[i, 4].Value.ToString());
-                        //await hocPhansCtrl.PostHocPhan(hocPhan);
-                        _context.HocPhans.Add(hocPhan);
+                        hocPhan.SoTinChi = Int16.Parse(rowCells[i, 4].Value.ToString().Substring(0, rowCells[i, 4].Value.ToString().IndexOf(",")));
+                        await hocPhansCtrl.PostHocPhan(hocPhan);
+                        //_context.HocPhans.Add(hocPhan);
                     }
                     var maLopHP = rowCells[i, 2].Value.ToString();
-                    if (LopHocPhanExists(maLopHP) == false)
+                    lopHocPhan = LopHocPhanExists(maLopHP);
+                    if (lopHocPhan == null)
                     {
-                        lopHocPhan.HocPhanId = _context.HocPhans.Where(x => x.MaHP == maHP).FirstOrDefault().Id;
-                        lopHocPhan.LopSVId = _context.LopSinhViens.Where(x => x.MaLop == maLopSV).FirstOrDefault().Id;
+                        lopHocPhan = new LopHocPhan();
+                        lopHocPhan.HocPhanId = hocPhan.Id;
+                        lopHocPhan.LopSVId = lopSinhVien.Id;
                         lopHocPhan.MaLopHP = maLopHP;
+                        lopHocPhan.CSThi = rowCells[i, 16].Value.ToString();
+                        lopHocPhan.NgayGioBDThi = DateTime.Parse(rowCells[i, 15].Value.ToString());
+                        lopHocPhan.Thu = rowCells[i, 14].Value.ToString();
                         lopHocPhan.ThoiKB = rowCells[i, 8].Value.ToString();
-                        _context.LopHocPhans.Add(lopHocPhan);
+                        await lopHocPhansCtrl.PostLopHocPhan(lopHocPhan);
                     }
-                    if (LichThiExists(maLopHP) == false)
+                    var phongThi = rowCells[i, 17].Value.ToString();
+                    if (LichThiExists(maLopHP, phongThi) == null)
                     {
-                        lichThi.CSThi = rowCells[i, 16].Value.ToString();
-                        lichThi.NgayGioBDThi = DateTime.Parse(rowCells[i, 15].Value.ToString());
+                        lichThi = new LichThi();
+                        lichThi.LopHPId = lopHocPhan.Id;
                         lichThi.PhongThi = rowCells[i, 17].Value.ToString();
                         lichThi.SoSV = Int16.Parse(rowCells[i, 12].Value.ToString());
-                        lichThi.Thu = rowCells[i, 14].Value.ToString();
-                        //await PostLichThi(lichThi);
-                        _context.LichThis.Add(lichThi);
+                        await PostLichThi(lichThi);
+                        //_context.LichThis.Add(lichThi);
                     }
-                    _context.SaveChanges();
+                    //_context.SaveChanges();
                 }
+
+                return new BaseResponse
+                {
+                    Message = "Import thành công"
+                };
             }
 
-            return new BaseResponse
-            {
-                Message = "Import thành công"
-            };
+            //return new BaseResponse
+            //{
+            //    Message = "Import thất bại"
+            //};
         }
 
-        private bool LopSinhVienExists(string maLop)
+        private LopSinhVien LopSinhVienExists(string maLop)
         {
-            return _context.LopSinhViens.Any(e => e.MaLop == maLop);
+            return _context.LopSinhViens.Where(e => e.MaLop == maLop).FirstOrDefault();
         }
 
-        private bool HocPhanExists(string maLop)
+        private HocPhan HocPhanExists(string maLop)
         {
-            return _context.HocPhans.Any(e => e.MaHP == maLop);
+            return _context.HocPhans.Where(e => e.MaHP == maLop).FirstOrDefault();
         }
 
-        private bool LopHocPhanExists(string maLop)
+        private LopHocPhan LopHocPhanExists(string maLop)
         {
-            return _context.LopHocPhans.Any(e => e.MaLopHP == maLop);
+            return _context.LopHocPhans.Where(e => e.MaLopHP == maLop).FirstOrDefault();
         }
 
-        private bool LichThiExists(string maLop)
+        private LichThi LichThiExists(string maLop, string phongThi)
         {
-            return _context.LichThis.Any(e => e.LopHP.MaLopHP == maLop);
+            return _context.LichThis.Where(e => e.LopHP.MaLopHP == maLop && e.PhongThi == phongThi).FirstOrDefault();
         }
     }
 

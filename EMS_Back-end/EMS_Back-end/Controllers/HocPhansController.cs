@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using EMS_Back_end.Models;
+using EMS_Back_end.Models.Responses;
 
 namespace EMS_Back_end.Controllers
 {
@@ -73,12 +74,26 @@ namespace EMS_Back_end.Controllers
 
         // POST: api/HocPhans
         [HttpPost]
-        public async Task<ActionResult<HocPhan>> PostHocPhan(HocPhan hocPhan)
+        public async Task<ActionResult<BaseResponse>> PostHocPhan(HocPhan hocPhan)
         {
-            _context.HocPhans.Add(hocPhan);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction("GetHocPhan", new { id = hocPhan.Id }, hocPhan);
+            try
+            {
+                _context.HocPhans.Add(hocPhan);
+                await _context.SaveChangesAsync();
+                return new BaseResponse
+                {
+                    Message = "Thêm mới thành công",
+                    Data = hocPhan
+                };
+            }
+            catch
+            {
+                return new BaseResponse
+                {
+                    ErrorCode = 1,
+                    Message = "Thêm mới thất bại"
+                };
+            }
         }
 
         // DELETE: api/HocPhans/5
