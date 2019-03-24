@@ -14,9 +14,9 @@ namespace EMS_Back_end.Models
 
         public string MaHP { get; set; }
 
-        public int SoTinChi { get; set; }
+        public string TenHP { get; set; }
 
-        public string HeDaoTao { get; set; }
+        public int SoTinChi { get; set; }
 
         public int DonViRaDeId { get; set; }
 

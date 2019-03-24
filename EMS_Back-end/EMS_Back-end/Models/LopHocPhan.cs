@@ -1,5 +1,4 @@
-﻿
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
@@ -14,6 +13,10 @@ namespace EMS_Back_end.Models
         public int Id { get; set; }
 
         public string MaLopHP { get; set; }
+
+        public string BacDaoTao { get; set; }
+
+        public string HeDaoTao { get; set; }
 
         [Column("THOIKHOABIEU")]
         public string ThoiKB { get; set; }

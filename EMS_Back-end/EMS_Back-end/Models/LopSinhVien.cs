@@ -16,6 +16,6 @@ namespace EMS_Back_end.Models
 
         public string NganhHoc { get; set; }
 
-        public string HeDaoTao { get; set; }
+        public string Khoa { get; set; }
     }
 }
