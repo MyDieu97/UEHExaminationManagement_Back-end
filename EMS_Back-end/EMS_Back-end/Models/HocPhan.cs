@@ -28,4 +28,19 @@ namespace EMS_Back_end.Models
         [ForeignKey("DonViQuanLyId")]
         public virtual DonVi DonViQuanLy { get; set; }
     }
+
+    public class HocPhanInfo
+    {
+        public int Id { get; set; }
+
+        public string MaHP { get; set; }
+
+        public string TenHP { get; set; }
+
+        public int SoTinChi { get; set; }
+
+        public string DonViRaDe { get; set; }
+
+        public string DonViQuanLy { get; set; }
+    }
 }

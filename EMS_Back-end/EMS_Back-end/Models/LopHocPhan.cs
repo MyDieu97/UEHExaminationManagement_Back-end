@@ -51,4 +51,79 @@ namespace EMS_Back_end.Models
         public virtual PhieuGiaoBaiThi PhieuBaiThi { get; set; }
 
     }
+
+    public class LopHocPhanInfo
+    {
+        public int Id { get; set; }
+
+        public string MaLopHP { get; set; }
+
+        public string BacDaoTao { get; set; }
+
+        public string HeDaoTao { get; set; }
+
+        public string ThoiKB { get; set; }
+
+        public DateTime NgayGioBDThi { get; set; }
+
+        public string Thu { get; set; }
+
+        public string CSThi { get; set; }
+
+        public string HinhThucThi { get; set; }
+
+        public string MaHP { get; set; }
+
+        public string TenHP { get; set; }
+
+        public int SoTinChi { get; set; }
+
+        public string LopSV { get; set; }
+
+        public string NganhHoc { get; set; }
+
+        public string Khoa { get; set; }
+    }
+
+    public class LopHocPhanQLDiemInfo
+    {
+        public int Id { get; set; }
+
+        public string MaLopHP { get; set; }
+
+        public string BacDaoTao { get; set; }
+
+        public string HeDaoTao { get; set; }
+
+        public string ThoiKB { get; set; }
+
+        public DateTime NgayGioBDThi { get; set; }
+
+        public string Thu { get; set; }
+
+        public string CSThi { get; set; }
+
+        public string HinhThucThi { get; set; }
+
+        public string MaHP { get; set; }
+
+        public string TenHP { get; set; }
+
+        public int SoTinChi { get; set; }
+
+        public string DonviQuanLy { get; set; }
+
+        public string DonViRaDe { get; set; }
+
+        public string LopSV { get; set; }
+
+        public string NganhHoc { get; set; }
+
+        public string Khoa { get; set; }
+
+        public string MaPhieuDiem { get; set; }
+
+        public string MaPhieuBaiThi { get; set; }
+    }
+
 }

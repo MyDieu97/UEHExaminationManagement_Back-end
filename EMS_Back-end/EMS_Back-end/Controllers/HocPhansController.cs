@@ -23,53 +23,77 @@ namespace EMS_Back_end.Controllers
 
         // GET: api/HocPhans
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<HocPhan>>> GetHocPhans()
+        public async Task<ActionResult<BaseResponse>> GetHocPhans()
         {
-            return await _context.HocPhans.ToListAsync();
+            var hocphans = await _context.HocPhans.Include(x => x.DonViQuanLy)
+                                            .Include(x => x.DonViRaDe).AsNoTracking()
+                                            .Select(x => new HocPhanInfo
+                                            {
+                                                Id = x.Id,                                                
+                                                MaHP = x.MaHP,
+                                                TenHP = x.TenHP,
+                                                SoTinChi = x.SoTinChi,
+                                                DonViRaDe = x.DonViRaDe == null ? " " : x.DonViRaDe.TenDonVi,
+                                                DonViQuanLy = x.DonViQuanLy == null ? " " : x.DonViQuanLy.TenDonVi
+                                            }).ToListAsync();
+
+
+            return new BaseResponse
+            {
+                Message = "Lấy danh sách thành công!",
+                Data = hocphans
+            };
         }
 
         // GET: api/HocPhans/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<HocPhan>> GetHocPhan(int id)
+        public async Task<ActionResult<BaseResponse>> GetHocPhan(int id)
         {
             var hocPhan = await _context.HocPhans.FindAsync(id);
 
             if (hocPhan == null)
             {
-                return NotFound();
+                return new BaseResponse
+                {
+                    ErrorCode = 1,
+                    Message = "Không tìm thấy"
+                };
             }
 
-            return hocPhan;
+            return new BaseResponse
+            {
+                Message = "Tìm thành công",
+                Data = hocPhan
+            };
         }
 
         // PUT: api/HocPhans/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutHocPhan(int id, HocPhan hocPhan)
+        public async Task<ActionResult<BaseResponse>> PutHocPhan(int id, HocPhan hocPhan)
         {
-            if (id != hocPhan.Id)
+            var hocPhanSua = await _context.HocPhans.FindAsync(id);
+            if (hocPhanSua == null)
             {
-                return BadRequest();
-            }
-
-            _context.Entry(hocPhan).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!HocPhanExists(id))
+                return new BaseResponse
                 {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+                    ErrorCode = 1,
+                    Message = "Không tìm thấy"
+                };
             }
 
-            return NoContent();
+            hocPhanSua.DonViQuanLyId = hocPhan.DonViQuanLyId;
+            hocPhanSua.DonViRaDeId = hocPhan.DonViRaDeId;
+            hocPhanSua.MaHP = hocPhan.MaHP;
+            hocPhanSua.SoTinChi = hocPhan.SoTinChi;
+            hocPhanSua.TenHP = hocPhan.TenHP;
+
+            _context.HocPhans.Update(hocPhanSua);
+            await _context.SaveChangesAsync();
+            return new BaseResponse
+            {
+                Message = "Cập nhật thành công",
+                Data = hocPhan
+            };
         }
 
         // POST: api/HocPhans
@@ -98,18 +122,25 @@ namespace EMS_Back_end.Controllers
 
         // DELETE: api/HocPhans/5
         [HttpDelete("{id}")]
-        public async Task<ActionResult<HocPhan>> DeleteHocPhan(int id)
+        public async Task<ActionResult<BaseResponse>> DeleteHocPhan(int id)
         {
             var hocPhan = await _context.HocPhans.FindAsync(id);
             if (hocPhan == null)
             {
-                return NotFound();
+                return new BaseResponse
+                {
+                    ErrorCode = 1,
+                    Message = "Xóa thất bại"
+                };
             }
 
             _context.HocPhans.Remove(hocPhan);
             await _context.SaveChangesAsync();
 
-            return hocPhan;
+            return new BaseResponse
+            {
+                Message = "Xóa thành công"
+            };
         }
 
         private bool HocPhanExists(int id)

@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using EMS_Back_end.Models;
+using EMS_Back_end.Models.Responses;
 
 namespace EMS_Back_end.Controllers
 {
@@ -22,79 +23,139 @@ namespace EMS_Back_end.Controllers
 
         // GET: api/LopHocPhans
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<LopHocPhan>>> GetLopHocPhans()
+        public async Task<ActionResult<BaseResponse>> GetLopHocPhans()
         {
-            return await _context.LopHocPhans.ToListAsync();
+            var lopHocPhan = await _context.LopHocPhans.Include(x => x.HocPhan)
+                                            .Include(x => x.LopSV).AsNoTracking()
+                                            .Select(x => new LopHocPhanInfo
+                                            {
+                                                Id = x.Id,
+                                                MaLopHP = x.MaLopHP,
+                                                ThoiKB = x.ThoiKB,
+                                                NgayGioBDThi = x.NgayGioBDThi,
+                                                Thu = x.Thu,
+                                                CSThi = x.CSThi,
+                                                HinhThucThi = x.HinhThucThi,
+                                                MaHP = x.HocPhan.MaHP,
+                                                TenHP = x.HocPhan.TenHP,
+                                                SoTinChi = x.HocPhan.SoTinChi,
+                                                BacDaoTao = x.BacDaoTao,
+                                                HeDaoTao = x.HeDaoTao,
+                                                LopSV = x.LopSV.MaLop,
+                                                NganhHoc = x.LopSV.NganhHoc,
+                                                Khoa = x.LopSV.Khoa
+                                            }).ToListAsync();
+
+            return new BaseResponse
+            {
+                Message = "Lấy danh sách thành công!",
+                Data = lopHocPhan
+            };
         }
 
         // GET: api/LopHocPhans/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<LopHocPhan>> GetLopHocPhan(int id)
+        public async Task<ActionResult<BaseResponse>> GetLopHocPhan(int id)
         {
             var lopHocPhan = await _context.LopHocPhans.FindAsync(id);
 
             if (lopHocPhan == null)
             {
-                return NotFound();
+                return new BaseResponse
+                {
+                    ErrorCode = 1,
+                    Message = "Không tìm thấy"
+                };
             }
 
-            return lopHocPhan;
+            return new BaseResponse
+            {
+                Message = "Tìm thành công",
+                Data = lopHocPhan
+            };
         }
 
         // PUT: api/LopHocPhans/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutLopHocPhan(int id, LopHocPhan lopHocPhan)
+        public async Task<ActionResult<BaseResponse>> PutLopHocPhan(int id, LopHocPhan lopHocPhan)
         {
-            if (id != lopHocPhan.Id)
+            var lopHocPhanSua = await _context.LopHocPhans.FindAsync(id);
+            if (lopHocPhanSua == null)
             {
-                return BadRequest();
-            }
-
-            _context.Entry(lopHocPhan).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!LopHocPhanExists(id))
+                return new BaseResponse
                 {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+                    ErrorCode = 1,
+                    Message = "Không tìm thấy"
+                };
             }
 
-            return NoContent();
+            lopHocPhanSua.BacDaoTao = lopHocPhan.BacDaoTao;
+            lopHocPhanSua.CSThi = lopHocPhan.CSThi;
+            lopHocPhanSua.HeDaoTao = lopHocPhan.HeDaoTao;
+            lopHocPhanSua.HinhThucThi = lopHocPhan.HinhThucThi;
+            lopHocPhanSua.HocPhanId = lopHocPhan.HocPhanId;
+            lopHocPhanSua.LopSVId = lopHocPhan.LopSVId;
+            lopHocPhanSua.MaLopHP = lopHocPhan.MaLopHP;
+            lopHocPhanSua.NgayGioBDThi = lopHocPhan.NgayGioBDThi;
+            lopHocPhanSua.PhieuBaiThiId = lopHocPhan.PhieuBaiThiId;
+            lopHocPhanSua.PhieuDiemId = lopHocPhan.PhieuDiemId;
+            lopHocPhanSua.ThoiKB = lopHocPhan.ThoiKB;
+            lopHocPhanSua.Thu = lopHocPhan.Thu;
+
+            _context.LopHocPhans.Update(lopHocPhanSua);
+            await _context.SaveChangesAsync();
+            return new BaseResponse
+            {
+                Message = "Cập nhật thành công",
+                Data = lopHocPhan
+            };
         }
 
         // POST: api/LopHocPhans
         [HttpPost]
-        public async Task<ActionResult<LopHocPhan>> PostLopHocPhan(LopHocPhan lopHocPhan)
+        public async Task<ActionResult<BaseResponse>> PostLopHocPhan(LopHocPhan lopHocPhan)
         {
-            _context.LopHocPhans.Add(lopHocPhan);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction("GetLopHocPhan", new { id = lopHocPhan.Id }, lopHocPhan);
+            try
+            {
+                _context.LopHocPhans.Add(lopHocPhan);
+                await _context.SaveChangesAsync();
+                return new BaseResponse
+                {
+                    Message = "Thêm mới thành công",
+                    Data = lopHocPhan
+                };
+            }
+            catch
+            {
+                return new BaseResponse
+                {
+                    ErrorCode = 1,
+                    Message = "Thêm mới thất bại"
+                };
+            }
         }
 
         // DELETE: api/LopHocPhans/5
         [HttpDelete("{id}")]
-        public async Task<ActionResult<LopHocPhan>> DeleteLopHocPhan(int id)
+        public async Task<ActionResult<BaseResponse>> DeleteLopHocPhan(int id)
         {
             var lopHocPhan = await _context.LopHocPhans.FindAsync(id);
             if (lopHocPhan == null)
             {
-                return NotFound();
+                return new BaseResponse
+                {
+                    ErrorCode = 1,
+                    Message = "Xóa thất bại"
+                };
             }
 
             _context.LopHocPhans.Remove(lopHocPhan);
             await _context.SaveChangesAsync();
 
-            return lopHocPhan;
+            return new BaseResponse
+            {
+                Message = "Xóa thành công"
+            };
         }
 
         private bool LopHocPhanExists(int id)

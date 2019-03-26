@@ -23,46 +23,62 @@ namespace EMS_Back_end.Controllers
 
         // GET: api/LopSinhViens
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<LopSinhVien>>> GetLopSinhViens()
+        public async Task<ActionResult<BaseResponse>> GetLopSinhViens()
         {
-            return await _context.LopSinhViens.ToListAsync();
+            return new BaseResponse
+            {
+                Message = "Lấy danh sách thành công!",
+                Data = await _context.LopSinhViens.Where(x => x.Id > 0).ToListAsync()
+            };
         }
 
         // GET: api/LopSinhViens/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<LopSinhVien>> GetLopSinhVien(int id)
+        public async Task<ActionResult<BaseResponse>> GetLopSinhVien(int id)
         {
             var lopSinhVien = await _context.LopSinhViens.FindAsync(id);
 
             if (lopSinhVien == null)
             {
-                return NotFound();
+                return new BaseResponse
+                {
+                    ErrorCode = 1,
+                    Message = "Không tìm thấy"
+                };
             }
 
-            return lopSinhVien;
+            return new BaseResponse
+            {
+                Message = "Tìm thành công",
+                Data = lopSinhVien
+            };
         }
 
         // PUT: api/LopSinhViens/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutLopSinhVien(int id, LopSinhVien lopSinhVien)
+        public async Task<ActionResult<BaseResponse>> PutLopSinhVien(int id, LopSinhVien lopSinhVien)
         {
-            if (id != lopSinhVien.Id)
+            var lopSinhVienSua = await _context.LopSinhViens.FindAsync(id);
+            if (lopSinhVienSua == null)
             {
-                return BadRequest();
+                return new BaseResponse
+                {
+                    ErrorCode = 1,
+                    Message = "Không tìm thấy"
+                };
             }
 
-            _context.Entry(lopSinhVien).State = EntityState.Modified;
+            lopSinhVienSua.MaLop = lopSinhVien.MaLop;
+            lopSinhVienSua.NganhHoc = lopSinhVien.NganhHoc;
+            lopSinhVienSua.Khoa = lopSinhVien.Khoa;
 
-            try
+            _context.LopSinhViens.Update(lopSinhVienSua);
+            await _context.SaveChangesAsync();
+            return new BaseResponse
             {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                
-            }
-
-            return NoContent();
+                Message = "Cập nhật thành công",
+                Data = lopSinhVien
+            };
         }
 
         // POST: api/LopSinhViens
@@ -91,18 +107,25 @@ namespace EMS_Back_end.Controllers
 
         // DELETE: api/LopSinhViens/5
         [HttpDelete("{id}")]
-        public async Task<ActionResult<LopSinhVien>> DeleteLopSinhVien(int id)
+        public async Task<ActionResult<BaseResponse>> DeleteLopSinhVien(int id)
         {
             var lopSinhVien = await _context.LopSinhViens.FindAsync(id);
             if (lopSinhVien == null)
             {
-                return NotFound();
+                return new BaseResponse
+                {
+                    ErrorCode = 1,
+                    Message = "Xóa thất bại"
+                };
             }
 
             _context.LopSinhViens.Remove(lopSinhVien);
             await _context.SaveChangesAsync();
 
-            return lopSinhVien;
+            return new BaseResponse
+            {
+                Message = "Xóa thành công"
+            };
         }
 
         private bool LopSinhVienExists(string maLop)

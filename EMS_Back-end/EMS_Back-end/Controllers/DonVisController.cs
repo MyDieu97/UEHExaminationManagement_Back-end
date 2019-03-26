@@ -28,7 +28,7 @@ namespace EMS_Back_end.Controllers
             return new BaseResponse
             {
                 Message = "Lấy danh sách thành công!",
-                Data = await _context.DonVis.ToListAsync()
+                Data = await _context.DonVis.Where(x => x.Id > 0).ToListAsync()
             };
         }
 

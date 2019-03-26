@@ -9,6 +9,7 @@ using EMS_Back_end.Models;
 using EMS_Back_end.Models.Responses;
 using EMS_Back_end.Models.Requests;
 using System.IO;
+using System.Globalization;
 
 namespace EMS_Back_end.Controllers
 {
@@ -33,7 +34,7 @@ namespace EMS_Back_end.Controllers
         [HttpGet]
         public async Task<ActionResult<BaseResponse>> GetLichThis()
         {
-            var lichthi = await _context.LichThis.Include(x => x.LopHP)
+            var lichthis = await _context.LichThis.Include(x => x.LopHP)
                                             .Include(x => x.LopHP.HocPhan)
                                             .Include(x => x.LopHP.LopSV).AsNoTracking()
                                             .Select(x => new LichThiInfo
@@ -59,78 +60,104 @@ namespace EMS_Back_end.Controllers
             return new BaseResponse
             {
                 Message = "Lấy danh sách thành công!",
-                Data = lichthi
+                Data = lichthis
             };
         }
 
         // GET: api/LichThis/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<LichThi>> GetLichThi(int id)
+        public async Task<ActionResult<BaseResponse>> GetLichThi(int id)
         {
             var lichThi = await _context.LichThis.FindAsync(id);
 
             if (lichThi == null)
             {
-                return NotFound();
+                return new BaseResponse
+                {
+                    ErrorCode = 1,
+                    Message = "Không tìm thấy"
+                };
             }
 
-            return lichThi;
+            return new BaseResponse
+            {
+                Message = "Tìm thành công",
+                Data = lichThi
+            };
         }
 
         // PUT: api/LichThis/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutLichThi(int id, LichThi lichThi)
+        public async Task<ActionResult<BaseResponse>> PutLichThi(int id, LichThi lichThi)
         {
-            if (id != lichThi.Id)
+            var lichThiSua = await _context.LichThis.FindAsync(id);
+            if (lichThiSua == null)
             {
-                return BadRequest();
-            }
-
-            _context.Entry(lichThi).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!LichThiExists(id))
+                return new BaseResponse
                 {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+                    ErrorCode = 1,
+                    Message = "Không tìm thấy"
+                };
             }
 
-            return NoContent();
+            lichThiSua.LopHPId = lichThi.LopHPId;
+            lichThiSua.PhongThi = lichThi.PhongThi;
+            lichThiSua.SoSV = lichThi.SoSV;
+
+            _context.LichThis.Update(lichThiSua);
+            await _context.SaveChangesAsync();
+            return new BaseResponse
+            {
+                Message = "Cập nhật thành công",
+                Data = lichThi
+            };
         }
 
         // POST: api/LichThis
         [HttpPost]
-        public async Task<ActionResult<LichThi>> PostLichThi(LichThi lichThi)
+        public async Task<ActionResult<BaseResponse>> PostLichThi(LichThi lichThi)
         {
-            _context.LichThis.Add(lichThi);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction("GetLichThi", new { id = lichThi.Id }, lichThi);
+            try
+            {
+                _context.LichThis.Add(lichThi);
+                await _context.SaveChangesAsync();
+                return new BaseResponse
+                {
+                    Message = "Thêm mới thành công",
+                    Data = lichThi
+                };
+            }
+            catch
+            {
+                return new BaseResponse
+                {
+                    ErrorCode = 1,
+                    Message = "Thêm mới thất bại"
+                };
+            }
         }
 
         // DELETE: api/LichThis/5
         [HttpDelete("{id}")]
-        public async Task<ActionResult<LichThi>> DeleteLichThi(int id)
+        public async Task<ActionResult<BaseResponse>> DeleteLichThi(int id)
         {
             var lichThi = await _context.LichThis.FindAsync(id);
             if (lichThi == null)
             {
-                return NotFound();
+                return new BaseResponse
+                {
+                    ErrorCode = 1,
+                    Message = "Xóa thất bại"
+                };
             }
 
             _context.LichThis.Remove(lichThi);
             await _context.SaveChangesAsync();
 
-            return lichThi;
+            return new BaseResponse
+            {
+                Message = "Xóa thành công"
+            };
         }
 
         private bool LichThiExists(int id)
@@ -175,7 +202,8 @@ namespace EMS_Back_end.Controllers
                         hocPhan = new HocPhan();
                         hocPhan.MaHP = maHP;
                         hocPhan.TenHP = rowCells[i, 3].Value.ToString();
-                        hocPhan.SoTinChi = Int16.Parse(rowCells[i, 4].Value.ToString().Substring(0, rowCells[i, 4].Value.ToString().IndexOf(",")));
+                        //hocPhan.SoTinChi = Int16.Parse(rowCells[i, 4].Value.ToString().Substring(0, rowCells[i, 4].Value.ToString().IndexOf(",")));
+                        hocPhan.SoTinChi = Int16.Parse(rowCells[i, 4].Value.ToString());
                         await hocPhansCtrl.PostHocPhan(hocPhan);
                     }
                     var maLopHP = rowCells[i, 2].Value.ToString();
@@ -186,8 +214,9 @@ namespace EMS_Back_end.Controllers
                         lopHocPhan.HocPhanId = hocPhan.Id;
                         lopHocPhan.LopSVId = lopSinhVien.Id;
                         lopHocPhan.MaLopHP = maLopHP;
-                        lopHocPhan.CSThi = rowCells[i, 16].Value.ToString();
-                        lopHocPhan.NgayGioBDThi = DateTime.Parse(rowCells[i, 15].Value.ToString());
+                        lopHocPhan.CSThi = rowCells[i, 16].Value.ToString();                        
+                        var dateStr = rowCells[i, 15].Value.ToString().Substring(0, 10) + " " + rowCells[i, 13].Value.ToString().Replace("g", ":") + ":00";
+                        lopHocPhan.NgayGioBDThi = DateTime.Parse(dateStr);
                         lopHocPhan.Thu = rowCells[i, 14].Value.ToString();
                         lopHocPhan.ThoiKB = rowCells[i, 8].Value.ToString();
                         lopHocPhan.HeDaoTao = rowCells[i, 7].Value.ToString();
