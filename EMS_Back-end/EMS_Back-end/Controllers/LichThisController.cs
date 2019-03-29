@@ -181,7 +181,7 @@ namespace EMS_Back_end.Controllers
                     file.Load(stream);
                 }
                 var worksheet = file.Workbook.Worksheets.First();
-                for (int i = 2; i < worksheet.Dimension.End.Row; i++)
+                for (int i = 1; i < worksheet.Dimension.End.Row; i++)
                 {
                     var rowCells = worksheet.Cells[i, 1, i, worksheet.Dimension.End.Column];
                     var maLopSV = rowCells[i, 10].Value.ToString();
@@ -202,7 +202,6 @@ namespace EMS_Back_end.Controllers
                         hocPhan = new HocPhan();
                         hocPhan.MaHP = maHP;
                         hocPhan.TenHP = rowCells[i, 3].Value.ToString();
-                        //hocPhan.SoTinChi = Int16.Parse(rowCells[i, 4].Value.ToString().Substring(0, rowCells[i, 4].Value.ToString().IndexOf(",")));
                         hocPhan.SoTinChi = Int16.Parse(rowCells[i, 4].Value.ToString());
                         await hocPhansCtrl.PostHocPhan(hocPhan);
                     }
