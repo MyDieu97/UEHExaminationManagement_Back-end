@@ -30,8 +30,8 @@ namespace EMS_Back_end.Controllers
             _hostingEnvironment = hostingEnvironment;
         }
 
-        [HttpPost]
-        public async Task<ActionResult<BaseResponse>> GetDeThis(DeThiRequest request)
+        [HttpPost("getdethisbydonvi")]
+        public async Task<ActionResult<BaseResponse>> GetDeThisbyDonVi(DeThiRequest request)
         {
             var query = await _context.LopHocPhans.Include(x => x.HocPhan)
                                                   .Include(x => x.HocPhan.DonViRaDe)
@@ -53,6 +53,39 @@ namespace EMS_Back_end.Controllers
             };
         }
 
+        [HttpPost("getdethis")]
+        public async Task<ActionResult<BaseResponse>> GetDeThis(DeThiRequest request)
+        {
+            var query = await _context.LichThis.Include(x => x.LopHP.HocPhan)
+                                                  .Include(x => x.LopHP.LopSV)
+                                                  .Where(x => x.LopHP.NgayGioBDThi >= request.NgayBatDau && x.LopHP.NgayGioBDThi <= request.NgayKetThuc)
+                                                  .Select(x => new LichThiInfo
+                                                  {
+                                                      Id = x.Id,
+                                                      PhongThi = x.PhongThi,
+                                                      SoSV = x.SoSV,
+                                                      MaLopHP = x.LopHP.MaLopHP,
+                                                      ThoiKB = x.LopHP.ThoiKB,
+                                                      NgayGioBDThi = x.LopHP.NgayGioBDThi,
+                                                      Thu = x.LopHP.Thu,
+                                                      CSThi = x.LopHP.CSThi,
+                                                      MaHP = x.LopHP.HocPhan.MaHP,
+                                                      TenHP = x.LopHP.HocPhan.TenHP,
+                                                      SoTinChi = x.LopHP.HocPhan.SoTinChi,
+                                                      BacDaoTao = x.LopHP.BacDaoTao,
+                                                      HeDaoTao = x.LopHP.HeDaoTao,
+                                                      MaLopSV = x.LopHP.LopSV.MaLop,
+                                                      NganhHoc = x.LopHP.LopSV.NganhHoc,
+                                                      Khoa = x.LopHP.LopSV.Khoa,
+                                                  })
+                                                  .ToListAsync();
+            return new BaseResponse
+            {
+                Message = "Lấy danh sách thành công",
+                Data = query
+            };
+        }
+
         [HttpPost("sendemail/{giangVienId}")]
         public async Task<ActionResult<BaseResponse>> ExportExcelFile(DeThiRequest request, int giangVienId = 0)
         {
@@ -64,7 +97,7 @@ namespace EMS_Back_end.Controllers
                                            .ToListAsync();
             using (var file = new OfficeOpenXml.ExcelPackage())
             {
-                string path = _hostingEnvironment.WebRootPath + "\\Forms\\FormDeThi.xlsx";
+                string path = _hostingEnvironment.WebRootPath + "\\Forms\\FormCungCapDeThi.xlsx";
                 using (FileStream stream = new FileStream(path, FileMode.Open))
                 {
                     file.Load(stream);
@@ -92,7 +125,7 @@ namespace EMS_Back_end.Controllers
                     email = list[0].HocPhan.DonViRaDe.Email;
                 }
                 for (int i = 0; i < list.Count; i++)
-                {                    
+                {
                     var rowCells = worksheet.Cells[i + 15, 1, i + 15, worksheet.Dimension.End.Column];
                     var data = list[i];
                     rowCells[i + 15, 1].Value = i + 1;
@@ -100,7 +133,7 @@ namespace EMS_Back_end.Controllers
                     rowCells[i + 15, 5].Value = data.HocPhan.TenHP;
                     rowCells[i + 15, 8].Value = data.MaLopHP;
                     rowCells[i + 15, 10].Value = data.NgayGioBDThi.ToString("dd-MM-yyyy") + " " + data.NgayGioBDThi.ToString("HH:mm");
-                    
+
                 }
                 byte[] excelData = file.GetAsByteArray();
                 var memoryStream = new MemoryStream(excelData);
@@ -109,42 +142,71 @@ namespace EMS_Back_end.Controllers
                 return new BaseResponse
                 {
                     Message = "Gửi mail thành công"
-                };
-                //FileInfo excelFile = new FileInfo(@"F:\Data.xlsx");
-                //file.SaveAs(excelFile);
-                //byte[] excelData = file.GetAsByteArray();
+                };                
+            }
+        }
 
-                //HttpResponseMessage result = new HttpResponseMessage(HttpStatusCode.OK);
-                //var memoryStream = new MemoryStream(excelData);
+        [HttpPost("downloadfile")]
+        public async Task<IActionResult> GetFormDuyetDeThi(DeThiRequest request)
+        {
+            var list = await _context.LichThis.Include(x => x.LopHP)
+                                           .Include(x => x.LopHP.HocPhan)
+                                           .Include(x => x.LopHP.LopSV)
+                                           .Where(x => x.LopHP.NgayGioBDThi >= request.NgayBatDau && x.LopHP.NgayGioBDThi <= request.NgayKetThuc)
+                                           .ToListAsync();
+            using (var file = new OfficeOpenXml.ExcelPackage())
+            {
+                string path = _hostingEnvironment.WebRootPath + "\\Forms\\FormDuyetDeThi.xlsx";
+                using (FileStream stream = new FileStream(path, FileMode.Open))
+                {
+                    file.Load(stream);
+                }
+                var worksheet = file.Workbook.Worksheets.First();
+                var n = list.Count;
+                for (int i = 0; i < n - 1; i++)
+                {
+                    worksheet.InsertRow(i + 6, 1);
+                    worksheet.Cells[5, 1, 5, worksheet.Dimension.End.Column].Copy(worksheet.Cells[i + 6, 1, i + 6, worksheet.Dimension.End.Column]);
+                    worksheet.Row(i + 6).StyleID = worksheet.Row(5).StyleID;
+                }
+                for (int i = 0; i < list.Count; i++)
+                {
+                    var rowCells = worksheet.Cells[i + 15, 1, i + 15, worksheet.Dimension.End.Column];
+                    var data = list[i];
+                    string he;
+                    switch(data.LopHP.HeDaoTao)
+                    {
+                        case "Chính quy":
+                            he = "CQ";
+                            break;
+                        case "Vừa học vừa làm":
+                            he = "VHVL";
+                            break;
+                        case "Văn bằng 2":
+                            he = "VB2";
+                            break;
+                        case "Liên thông":
+                            he = "LT";
+                            break;
+                        default:
+                            he = "";
+                            break;
+                            
+                    }
+                    rowCells[i + 5, 2].Value = i + 1;
+                    rowCells[i + 5, 3].Value = data.LopHP.HocPhan.TenHP + "_" + data.LopHP.ThoiKB + "_" + data.LopHP.HocPhan.SoTinChi;
+                    rowCells[i + 5, 4].Value = data.LopHP.LopSV.Khoa.Substring(5) + "_" +  data.LopHP.MaLopHP.Substring(4) + "_" + data.LopHP.LopSV.MaLop + "_" + he;
+                    rowCells[i + 5, 5].Value = data.LopHP.NgayGioBDThi.ToString("dd-MM-yyyy") + " " + data.LopHP.NgayGioBDThi.ToString("HH:mm");
+                    rowCells[i + 5, 7].Value = data.LopHP.CSThi;
+                    rowCells[i + 5, 8].Value = data.PhongThi;
+                    rowCells[i + 5, 9].Value = data.SoSV;
 
-                //result.Content = new ByteArrayContent(memoryStream.GetBuffer());
-                //result.Content.Headers.ContentType = new MediaTypeHeaderValue("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-                //result.Content.Headers.ContentDisposition = new ContentDispositionHeaderValue("attachment")
-                //{
-                //    FileName = "Data.xlsx"
-                //};
-                //return result;
+                }
+                byte[] excelData = file.GetAsByteArray();
 
-                //return File(memoryStream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Data.xlsx");
+                var memoryStream = new MemoryStream(excelData);
 
-                //using (MemoryStream memoryStream = new MemoryStream())
-                //{
-                //    file.SaveAs(memoryStream);
-
-                //    var result = new HttpResponseMessage(HttpStatusCode.OK)
-                //    {
-                //        Content = new ByteArrayContent(memoryStream.ToArray())
-                //    };
-                //    result.Content.Headers.ContentDisposition =
-                //        new System.Net.Http.Headers.ContentDispositionHeaderValue("attachment")
-                //        {
-                //            FileName = "Data.xlsx"
-                //        };
-                //    result.Content.Headers.ContentType =
-                //        new MediaTypeHeaderValue("application/octet-stream");
-
-                //    return result;
-                //}
+                return File(memoryStream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Data.xlsx");
             }
         }
     }

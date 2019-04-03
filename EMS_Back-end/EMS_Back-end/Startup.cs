@@ -1,24 +1,20 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using EMS_Back_end.Models;
+﻿using EMS_Back_end.Models;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 
 namespace EMS_Back_end
 {
     public class Startup
     {
+        private readonly IHostingEnvironment _env;
+
         public Startup(IHostingEnvironment env)
         {
+            _env = env;
             var builder = new ConfigurationBuilder().SetBasePath(env.ContentRootPath)
                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
                 .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true)
@@ -32,8 +28,10 @@ namespace EMS_Back_end
         public void ConfigureServices(IServiceCollection services)
         {
             //services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
-            string connectionString = Configuration.GetConnectionString("DefaultConection");
-            services.AddDbContext<Context>(option => option.UseSqlServer(connectionString));
+            //string connectionString = Configuration.GetConnectionString("DefaultConection");
+            string connectionString = "Data Source=" + _env.WebRootPath + "\\EMS.db";
+            services.AddDbContext<Context>(option => option.UseSqlite(connectionString));
+            services.AddDbContext<Context>(option => option.UseSqlite(""));
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2)
                 .AddJsonOptions(option => {
                     option.SerializerSettings.NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore;
